@@ -103,7 +103,14 @@ def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel('localhost:50051') as channel:
+    with open('signer.pem', 'rb') as f:
+        signer_pem = f.read()
+    with open('signed-foo.key', 'rb') as f:
+        private_key = f.read()
+    with open('signed-foo.pem', 'rb') as f:
+        certificate_chain = f.read()
+    channel_credentials = grpc.ssl_channel_credentials(signer_pem, private_key, certificate_chain)
+    with grpc.secure_channel('foo.com:4443', channel_credentials) as channel:
         stub = route_guide_pb2_grpc.RouteGuideStub(channel)
         print("-------------- GetFeature --------------")
         guide_get_feature(stub)

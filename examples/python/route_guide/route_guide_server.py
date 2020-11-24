@@ -114,7 +114,12 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     route_guide_pb2_grpc.add_RouteGuideServicer_to_server(
         RouteGuideServicer(), server)
-    server.add_insecure_port('[::]:50051')
+    with open('signed-foo.key', 'rb') as f:
+        private_key = f.read()
+    with open('signed-foo.pem', 'rb') as f:
+        certificate_chain = f.read()
+    server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))
+    server.add_secure_port('foo.com:4444', server_credentials)
     server.start()
     server.wait_for_termination()
 
